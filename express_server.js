@@ -14,6 +14,16 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+function generateRandomString() {
+  let uniqueURL = ""
+  let alphaNumeric = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  const count = 6;
+  for (let x = 0; x < count; x++) {
+    uniqueURL += alphaNumeric.charAt(Math.floor(Math.random() * alphaNumeric.length))
+  }
+  return uniqueURL
+};
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -49,7 +59,3 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
 });
-
-function generateRandomString() {
-
-}
