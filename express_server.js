@@ -64,8 +64,8 @@ app.get("/register", (req, res) => {
 
 app.get("/login", (req, res) => {
   const templateVars = { user: users[req.cookies.user_id] }
-  // console.log(templateVars);
-  res.render("./partials/_header", templateVars)
+  console.log("login template vars:", templateVars);
+  res.render("urls_login", templateVars)
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -115,7 +115,7 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  //console.log("login req.body:", req.body)
+  console.log("login req.body:", req.body)
   const username = req.body.username;
   res.cookie("username", username);
   res.redirect("/urls")
