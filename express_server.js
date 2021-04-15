@@ -22,9 +22,16 @@ const emailLookup = (email, userData) => {
   for(const user in userData) {
     console.log("user info is:", user)
     if (userData[user].email === email) {
-      return true
+      return userData[user].id
     } 
-  } return false
+  } 
+}
+
+const passwordLookup = (password, userData) => {
+  for(const user in userData) {
+    console.log("user password is: ", userData[user].password)
+    return userData[user].password;
+  } 
 }
 
 function generateRandomString() {
@@ -64,7 +71,7 @@ app.get("/register", (req, res) => {
 
 app.get("/login", (req, res) => {
   const templateVars = { user: users[req.cookies.user_id] }
-  console.log("login template vars:", templateVars);
+  // console.log("login template vars:", templateVars);
   res.render("urls_login", templateVars)
 });
 
@@ -102,7 +109,7 @@ app.post("/register", (req, res) => {
   } else {
   const user_id = generateRandomString();
   // console.log(user_id);
-  console.log("users:", users)
+  // console.log("users:", users)
   users[user_id] = {
     id: user_id,
     email: email,
@@ -116,13 +123,32 @@ app.post("/register", (req, res) => {
 
 app.post("/login", (req, res) => {
   console.log("login req.body:", req.body)
-  const username = req.body.username;
-  res.cookie("username", username);
-  res.redirect("/urls")
+  const email = req.body.email;
+  const password = req.body.password;
+  console.log(email);
+  console.log(password);
+  if(emailLookup(email, users) && passwordLookup(password, users) !== password) {
+    console.log("email is:", email)
+    console.log("password entered:", password)
+    console.log("password does not match")
+    res.status(403).render('passwordMatch')
+  } 
+
+  // res.cookie("user_id", user_id);
+  // res.redirect("/urls")
 })
 
+// const emailLookup = (email, userData) => {
+//   for(const user in userData) {
+//     console.log("user info is:", user)
+//     if (userData[user].email === email) {
+//       return userData[user].id
+//     } 
+//   } 
+// }
+
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls")
 })
 
