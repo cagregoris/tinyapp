@@ -128,14 +128,19 @@ app.post("/login", (req, res) => {
   console.log(email);
   console.log(password);
   if(emailLookup(email, users) && passwordLookup(password, users) !== password) {
-    console.log("email is:", email)
-    console.log("password entered:", password)
-    console.log("password does not match")
+    // console.log("email is:", email)
+    // console.log("password entered:", password)
+    // console.log("password does not match")
     res.status(403).render('passwordMatch')
-  } 
-
-  // res.cookie("user_id", user_id);
-  // res.redirect("/urls")
+  } else if(!emailLookup(email, users)) {
+    console.log("email cannot be found")
+    res.status(403).render('emailNotFound')
+  } else {
+    const key = Object.keys(users)
+    // console.log(key)
+    res.cookie("user_id", key);
+    res.redirect("/urls")
+  }
 })
 
 // const emailLookup = (email, userData) => {
