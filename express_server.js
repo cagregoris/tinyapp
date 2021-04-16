@@ -39,13 +39,15 @@ function generateRandomString() {
   return uniqueURL
 };
 
-const urlsForUser = (id) => {
+const urlsForUser = (id, urlDatabase) => {
   const filteredUrls = {};
+  // console.log("hi.......", id, "---", urlDatabase)
   for (const url in urlDatabase) {
     if (urlDatabase[url].userID === id) {
       filteredUrls[url] = urlDatabase[url]
     }
   }
+  // console.log("hello.......", filteredUrls)
   return filteredUrls;
 };
 
@@ -62,7 +64,9 @@ app.listen(PORT, () => {
 
 app.get("/urls", (req, res) => {
   const userId = req.cookies.user_id;
-  let templateVars = { user: users[userId], urls: urlDatabase };
+  const user = users[userId]
+  const urls = urlsForUser(userId, urlDatabase); 
+  let templateVars = { user, urls };
   res.render("urls_index", templateVars);
 });
 
@@ -72,13 +76,15 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, user: users[req.cookies.user_id], longURL: urlDatabase[req.params.shortURL] };
+  const userID = req.cookies.user_id;
+  const shortURL = req.params.shortURL;
+  const user = users[userID]
+  const templateVars = { shortURL: req.params.shortURL, user: user, longURL: urlDatabase[shortURL].longURL };  
   res.render("urls_show", templateVars)
-  console.log('userDatabase is:', urlDatabase)
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   console.log(longURL)
   res.redirect(longURL);
 });
@@ -91,14 +97,15 @@ app.post("/urls", (req, res) => {
     longURL: longURL,
     userID: userID
   }
+  console.log("something---", userID, "----", urlDatabase)
   res.redirect(`/urls/${shortURL}`);
 });
 
 app.post("/urls/:shortURL", (req, res) => {
   const longURL = req.body.longURL;
   const shortURL = req.params.shortURL;
-  urlDatabase[shortURL] = longURL
-  res.redirect("/urls/");
+  urlDatabase[shortURL].longURL = longURL
+  res.redirect("/urls");
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -114,13 +121,13 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  if(emailLookup(email, users) && passwordLookup(password, users) !== password) {
+  const userId = emailLookup(email, users)
+  if(userId && passwordLookup(password, users) !== password) {
     res.status(403).render('passwordMatch')
   } else if(!emailLookup(email, users)) {
     res.status(403).render('emailNotFound')
   } else {
-    const key = Object.keys(users)
-    res.cookie("user_id", key);
+    res.cookie("user_id", userId);
     res.redirect("/urls")
   }
 })
