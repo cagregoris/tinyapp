@@ -27,67 +27,100 @@ const { generateRandomString, urlsForUser, getUserByEmail } = require('./helpers
 
 //===ROUTES==========================================================================================
 
+
+// redirects to login page
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect("/login")
 });
 
 app.listen(PORT, () => {
 });
 
+// If user is logged in, this page displays the user's urls
 app.get("/urls", (req, res) => {
   const userId = req.session.user_id;
   const user = users[userId]
   const urls = urlsForUser(userId, urlDatabase); 
   let templateVars = { user, urls };
-  res.render("urls_index", templateVars);
+  if (!userId) {
+    res.redirect('/login')
+  } else {
+    res.render("urls_index", templateVars);
+  }
 });
 
+// page for user to create new url
+// if user is not logged in, they are redirected to the login page
 app.get("/urls/new", (req, res) => {
-  const templateVars = { user: users[req.session.user_id] };
-  res.render("urls_new", templateVars);
+  if (req.session.user_id) {
+    const templateVars = { user: users[req.session.user_id] };
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect('/login')
+  }
 });
 
+// if user is logged in and the url belongs to the user, this page shows details about the short url.
 app.get("/urls/:shortURL", (req, res) => {
   const userID = req.session.user_id;
   const shortURL = req.params.shortURL;
   const user = users[userID]
   const templateVars = { shortURL: req.params.shortURL, user: user, longURL: urlDatabase[shortURL].longURL };  
-  res.render("urls_show", templateVars)
+  const userUrls = urlsForUser(userID, urlDatabase)
+
+  if (!urlDatabase[shortURL]) {
+    res.render('urlDoesNotExist')
+  } else if (!userID || !userUrls[shortURL]) {
+    res.render('unauthorized')
+  } 
+  else {
+    res.render("urls_show", templateVars)
+  }
 });
 
+// redirects to the url
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
+//adds the new url to the database and redirects to the short url page.
 app.post("/urls", (req, res) => { 
-  const shortURL = generateRandomString();
   const longURL = req.body.longURL;
   const userID = req.session.user_id;
-  urlDatabase[shortURL] = {
-    longURL: longURL,
-    userID: userID
+  if (req.session.user_id) {
+    const shortURL = generateRandomString();
+    urlDatabase[shortURL] = {
+      longURL: longURL,
+      userID: userID
+    }
+    res.redirect(`/urls/${shortURL}`);
+  } else {
+    res.render('unauthorized')
   }
-  res.redirect(`/urls/${shortURL}`);
 });
 
+// updates the long url
 app.post("/urls/:shortURL", (req, res) => {
   const longURL = req.body.longURL;
   const shortURL = req.params.shortURL;
   urlDatabase[shortURL].longURL = longURL
-  res.redirect("/urls");
+    res.redirect("/urls");
 });
 
+// deletes url from database
 app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL]
   res.redirect("/urls")
 });
 
+// users that are registered login page
 app.get("/login", (req, res) => {
   const templateVars = { user: users[req.session.user_id] }
   res.render("urls_login", templateVars)
 });
 
+// if login information is valid, user is redirected to urls_index
 app.post("/login", (req, res) => {
   const user = getUserByEmail(req.body.email, users);
   if(user && bcrypt.compareSync(req.body.password, user.password)) {
@@ -98,16 +131,19 @@ app.post("/login", (req, res) => {
   };
 });
 
+// redirects to urls page and clears cookies
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/urls")
 })
 
+// user registration page
 app.get("/register", (req, res) => {
   const templateVars = { user: users[req.session.user_id] }
   res.render("urls_registration", templateVars)
 })
 
+// if registration info is valid, redirects to urls index
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -127,6 +163,6 @@ app.post("/register", (req, res) => {
     }
 
   } else {
-    res.render('missingInfor')
+    res.render('missingInfo')
   }
 });

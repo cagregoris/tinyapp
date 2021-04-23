@@ -1,3 +1,5 @@
+// generates a random string
+// Used to create user Ids and short URLs
 function generateRandomString() {
   let uniqueURL = ""
   let alphaNumeric = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -8,18 +10,18 @@ function generateRandomString() {
   return uniqueURL
 };
 
+// returns an object of short urls specific to the userID
 const urlsForUser = (id, urlDatabase) => {
   const filteredUrls = {};
-  // console.log("hi.......", id, "---", urlDatabase)
   for (const url in urlDatabase) {
     if (urlDatabase[url].userID === id) {
       filteredUrls[url] = urlDatabase[url]
     }
   }
-  // console.log("hello.......", filteredUrls)
   return filteredUrls;
 };
 
+//Returns user ID for the user given email address
 const getUserByEmail = (email, database) => {
   for (const user in database) {
     if (database[user].email === email) {
